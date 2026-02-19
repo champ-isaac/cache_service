@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"tw.com.championtek.redis/redis"
+	"tw.com.championtek.cache/redis"
 )
 
 const (

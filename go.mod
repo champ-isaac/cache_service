@@ -1,4 +1,4 @@
-module tw.com.championtek.redis
+module tw.com.championtek.cache
 
 go 1.26
 
