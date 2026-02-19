@@ -22,3 +22,6 @@ services:
       - redis_ui:/data
     depends_on:
       - redis
+volumes:
+  redis_data:
+  redis_ui:

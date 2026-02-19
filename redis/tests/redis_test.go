@@ -20,45 +20,54 @@ const (
 	uuidFmt = "GUID%06d"
 )
 
+type CacheData struct {
+	Raw       string    `redis:"raw_value"`
+	Token     string    `redis:"token_value"`
+	Active    bool      `redis:"active"`
+	Timestamp time.Time `redis:"timestamp"`
+}
+
 func TestClient_HSet_N_HGetAllNScan(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		key := fmt.Sprintf(vinFmt, randInt(minNum, maxNum))
-		value := map[string]any{
-			"raw_value":   key,
-			"token_value": sha512HashToBase64(key),
-			"active":      true,
-			"timestamp":   time.Now().Format("2006-01-02 15:04:05"),
+		raw := fmt.Sprintf(vinFmt, randInt(minNum, maxNum))
+		value := CacheData{
+			Raw:       raw,
+			Token:     sha512HashToBase64(raw),
+			Active:    true,
+			Timestamp: time.Now(),
 		}
-		_, err := client.HSet(ctx, fmt.Sprintf("%s:%s", vinRef, key), value)
+		key := fmt.Sprintf("%s:%s", vinRef, raw)
+		_, err := client.HSet(ctx, key, value)
 		assert.NoError(t, err)
 
-		var out map[string]any
+		var out CacheData
 		err = client.HGetAllNScan(ctx, key, &out)
 		assert.NoError(t, err)
 
-		assert.Equal(t, key, out["raw_value"].(string))
-		assert.Equal(t, value, out["token_value"].(string))
-		assert.True(t, out["active"].(bool))
+		assert.Equal(t, value.Raw, out.Raw)
+		assert.Equal(t, value.Token, out.Token)
+		assert.True(t, value.Active, out.Active)
 	}
 
 	for i := 0; i < 50; i++ {
-		key := fmt.Sprintf(uuidFmt, randInt(minNum, maxNum))
-		value := map[string]any{
-			"raw_value":   key,
-			"token_value": sha512HashToBase64(key),
-			"active":      false,
-			"timestamp":   time.Now().Format("2006-01-02 15:04:05"),
+		raw := fmt.Sprintf(uuidFmt, randInt(minNum, maxNum))
+		value := CacheData{
+			Raw:       raw,
+			Token:     sha512HashToBase64(raw),
+			Active:    false,
+			Timestamp: time.Now(),
 		}
-		_, err := client.HSet(ctx, fmt.Sprintf("%s:%s", uuidRef, key), value)
+		key := fmt.Sprintf("%s:%s", uuidRef, raw)
+		_, err := client.HSet(ctx, key, value)
 		assert.NoError(t, err)
 
-		var out map[string]any
+		var out CacheData
 		err = client.HGetAllNScan(ctx, key, &out)
 		assert.NoError(t, err)
 
-		assert.Equal(t, key, out["raw_value"].(string))
-		assert.Equal(t, value, out["token_value"].(string))
-		assert.False(t, out["active"].(bool))
+		assert.Equal(t, value.Raw, out.Raw)
+		assert.Equal(t, value.Token, out.Token)
+		assert.False(t, value.Active, out.Active)
 	}
 }
 
